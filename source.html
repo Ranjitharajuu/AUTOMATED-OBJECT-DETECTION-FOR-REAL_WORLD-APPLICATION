@@ -1,0 +1,73 @@
+<!DOCTYPE html> 
+<html lang="en"> 
+<head> 
+<meta charset="UTF-8"> 
+<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+<title>Object Detection</title> 
+<link rel="stylesheet" href="styles.css"> 
+</head> 
+<body> 
+<div class="container"> 
+<h1>Object Detection</h1> 
+<input type="file" id="file-upload" accept="image/*" /> 
+<div id="status">Upload an image to start detecting objects.</div> 
+<div id="image-container" class="image-container"></div> 
+</div> 
+<script type="module"> 
+import { pipeline, env } from "https://cdn.jsdelivr.net/npm/@xenova/transformers@2.6.0";  
+OBJECT RECOGNITION 
+env.allowLocalModels = false; 
+const fileUpload = document.getElementById('file-upload'); 
+const imageContainer = document.getElementById('image-container'); 
+const status = document.getElementById('status'); 
+fileUpload.addEventListener('change', function (e) { 
+const file = e.target.files[0]; 
+const reader = new FileReader(); 
+reader.onload = function (e2) { 
+const image = document.createElement('img'); 
+image.src = e2.target.result; 
+imageContainer.innerHTML = ''; 
+imageContainer.appendChild(image); 
+detect(image); 
+} 
+reader.readAsDataURL(file); 
+}); 
+const detect = async (image) => { 
+status.textContent = "•
+ try { 
+˙Q Analyzing..."; 
+const detector = await pipeline("object-detection", "Xenova/detr-resnet-50");  
+OBJECT RECOGNITION 
+const output = await detector(image.src, { 
+threshold: 0.5, 
+percentage: true 
+}); 
+status.textContent = ⬛ Detection complete, found ${output.length} objects.; 
+output.forEach(renderBox); 
+} catch (error) { 
+status.textContent = "+ An error occurred during detection."; 
+console.error(error); 
+} 
+} 
+function renderBox({ box, label, score }) { 
+const { xmin, ymin, xmax, ymax } = box; 
+const boxElement = document.createElement("div"); 
+boxElement.className = "bounding-box"; 
+Object.assign(boxElement.style, { 
+border: '2px solid #00FFFF', 
+position: 'absolute', 
+left: (100 * xmin) + '%', 
+top: (100 * ymin) + '%', 
+width: (100 * (xmax - xmin)) + "%", 
+height: (100 * (ymax - ymin)) + "%" 
+OBJECT RECOGNITION 
+}); 
+const labelElement = document.createElement('span'); 
+labelElement.textContent = ${label} (${Math.round(score * 100)}%); 
+labelElement.className = "bounding-box-label"; 
+boxElement.appendChild(labelElement); 
+imageContainer.appendChild(boxElement); 
+} 
+</script> 
+</body> 
+</html>
